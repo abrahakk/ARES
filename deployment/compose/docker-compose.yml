@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ares-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ares-network
+
+  ares-api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/api.Dockerfile
+    container_name: ares-api
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      ARES_REDIS_HOST: redis
+      ARES_REDIS_PORT: "6379"
+      ARES_MODEL_PATH: /app/models/onnx/ares_policy.onnx
+      ARES_LOG_LEVEL: info
+    volumes:
+      - ../../models/onnx:/app/models/onnx:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - ares-network
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: ares-prometheus
+    depends_on:
+      - ares-api
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - ares-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: ares-grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ares_demo   
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ../../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - ares-network
+
+networks:
+  ares-network:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:

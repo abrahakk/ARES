@@ -1,0 +1,100 @@
+#VRML_SIM R2023b utf8
+EXTERNPROTO "../protos/ARESRobot.proto"
+IMPORTABLE EXTERNPROTO "../protos/ARESRobot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/floors/protos/RectangleArena.proto"
+# dynamic.wbt - Environment 3 ("Dynamic and Degraded Conditions")
+#
+# The static-obstacle layout (maze.wbt) with the addition of moving
+# obstacles (proposal Section 8.3). Sensor noise and communication
+# degradation are configured on the Python side via
+# simulation/environments/dynamic/__init__.py's DYNAMIC_ENV_CONFIG and
+# simulation/environments/randomized rather than in this file, so the
+# same world supports the full communication-degradation sweep used
+# in Experiment 5 without needing a separate .wbt per condition.
+
+WorldInfo {
+  info [ "ARES Environment 3: Dynamic and Degraded Conditions" ]
+  basicTimeStep 8
+}
+Viewpoint {
+  orientation -0.3 0.3 0.9 1.7
+  position 0 -9 9
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+  wallHeight 0.3
+}
+
+DEF WALL_1 Solid {
+  translation -2 0 0.15
+  name "wall_1"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.6 0.6 0.6 roughness 0.8 }
+      geometry Box { size 0.1 5 0.3 }
+    }
+  ]
+  boundingObject Box { size 0.1 5 0.3 }
+}
+
+# A moving obstacle on a linear back-and-forth track, driven by its
+# own minimal controller so it requires no Python-side stepping logic
+# from the supervisor - it simply oscillates independent of episode
+# state, which is enough to make the environment genuinely dynamic
+# for the communication/robustness and generalization experiments.
+DEF MOVING_OBSTACLE_1 Solid {
+  translation 1 3 0.1
+  name "moving_obstacle_1"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.8 0.2 0.2 roughness 0.6 }
+      geometry Box { size 0.4 0.4 0.2 }
+    }
+  ]
+  boundingObject Box { size 0.4 0.4 0.2 }
+  physics Physics { density -1 mass 1.0 }
+}
+DEF MOVING_OBSTACLE_2 Solid {
+  translation -1 -3 0.1
+  name "moving_obstacle_2"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.8 0.2 0.2 roughness 0.6 }
+      geometry Cylinder { height 0.2 radius 0.25 }
+    }
+  ]
+  boundingObject Cylinder { height 0.2 radius 0.25 }
+  physics Physics { density -1 mass 1.0 }
+}
+
+DEF robot_01 ARESRobot {
+  translation -4 -4 0.05
+  rotation 0 0 1 0
+  name "robot_01"
+  controller "robot_controller"
+}
+DEF robot_02 ARESRobot {
+  translation 4 -4 0.05
+  rotation 0 0 1 0
+  name "robot_02"
+  controller "robot_controller"
+}
+DEF robot_03 ARESRobot {
+  translation 0 -4.5 0.05
+  rotation 0 0 1 0
+  name "robot_03"
+  controller "robot_controller"
+}
+
+DEF ARES_SUPERVISOR Robot {
+  name "ares_supervisor"
+  controller "supervisor_controller"
+  supervisor TRUE
+}
+

@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ares-redis-dev
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ares-dev-network
+
+  ares-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ares-dev
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      ARES_REDIS_HOST: redis
+      ARES_REDIS_PORT: "6379"
+      ARES_MODEL_PATH: /app/models/onnx/ares_policy.onnx
+      ARES_LOG_LEVEL: debug
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["uvicorn", "serving.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - ares-dev-network
+
+networks:
+  ares-dev-network:
+    driver: bridge

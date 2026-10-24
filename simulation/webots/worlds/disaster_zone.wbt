@@ -1,0 +1,109 @@
+#VRML_SIM R2023b utf8
+EXTERNPROTO "../protos/ARESRobot.proto"
+IMPORTABLE EXTERNPROTO "../protos/ARESRobot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/floors/protos/RectangleArena.proto"
+# disaster_zone.wbt - Held-out generalization environment (Experiment 7)
+#
+# Structurally distinct from the training curriculum (simple.wbt,
+# maze.wbt, dynamic.wbt): an irregular obstacle layout rather than the
+# rectilinear partitions used during training, intended to test
+# whether a policy generalizes rather than memorizes (proposal
+# Section 11.7 / RQ4). This world is never used during training - it
+# is loaded only for the final generalization evaluation pass.
+
+WorldInfo {
+  info [ "ARES held-out generalization environment (never used in training)" ]
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation -0.3 0.3 0.9 1.7
+  position 0 -9 9
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 8
+  wallHeight 0.3
+}
+
+DEF RUBBLE_1 Solid {
+  translation -3 1 0.1
+  rotation 0 0 1 0.4
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.4 0.4 0.35 roughness 0.9 }
+      geometry Box { size 1.2 0.6 0.25 }
+    }
+  ]
+  boundingObject Box { size 1.2 0.6 0.25 }
+}
+DEF RUBBLE_2 Solid {
+  translation 0.5 -1.5 0.1
+  rotation 0 0 1 -0.6
+  name "rubble_2"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.4 0.4 0.35 roughness 0.9 }
+      geometry Box { size 0.8 1.0 0.2 }
+    }
+  ]
+  boundingObject Box { size 0.8 1.0 0.2 }
+}
+DEF RUBBLE_3 Solid {
+  translation 3 2 0.1
+  name "rubble_3"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.4 0.4 0.35 roughness 0.9 }
+      geometry Cylinder { height 0.2 radius 0.4 }
+    }
+  ]
+  boundingObject Cylinder { height 0.2 radius 0.4 }
+}
+DEF RUBBLE_4 Solid {
+  translation -1 -2.8 0.1
+  rotation 0 0 1 1.1
+  name "rubble_4"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.4 0.4 0.35 roughness 0.9 }
+      geometry Box { size 0.6 0.6 0.3 }
+    }
+  ]
+  boundingObject Box { size 0.6 0.6 0.3 }
+}
+DEF RUBBLE_5 Solid {
+  translation 2 -2.2 0.1
+  name "rubble_5"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.4 0.4 0.35 roughness 0.9 }
+      geometry Cylinder { height 0.25 radius 0.3 }
+    }
+  ]
+  boundingObject Cylinder { height 0.25 radius 0.3 }
+}
+
+DEF robot_01 ARESRobot {
+  translation -4.5 -3.5 0.05
+  rotation 0 0 1 0
+  name "robot_01"
+  controller "robot_controller"
+}
+DEF robot_02 ARESRobot {
+  translation 4.5 -3.5 0.05
+  rotation 0 0 1 0
+  name "robot_02"
+  controller "robot_controller"
+}
+
+DEF ARES_SUPERVISOR Robot {
+  name "ares_supervisor"
+  controller "supervisor_controller"
+  supervisor TRUE
+}
+

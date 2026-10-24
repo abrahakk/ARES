@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-api
+  namespace: ares
+  labels:
+    app: ares-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ares-api
+  template:
+    metadata:
+      labels:
+        app: ares-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: ares-api
+          image: ares-api:latest   
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ARES_REDIS_HOST
+              value: ares-redis
+            - name: ARES_REDIS_PORT
+              value: "6379"
+            - name: ARES_MODEL_PATH
+              value: /app/models/onnx/ares_policy.onnx
+            - name: ARES_LOG_LEVEL
+              value: info
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          volumeMounts:
+            - name: onnx-models
+              mountPath: /app/models/onnx
+              readOnly: true
+      volumes:
+        - name: onnx-models
+          persistentVolumeClaim:
+            claimName: ares-model-store
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-api
+  namespace: ares
+spec:
+  selector:
+    app: ares-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ares-api-hpa
+  namespace: ares
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ares-api
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ares-model-store
+  namespace: ares
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-redis
+  namespace: ares
+  labels:
+    app: ares-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ares-redis
+  template:
+    metadata:
+      labels:
+        app: ares-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["redis-server", "--save", "", "--appendonly", "no"]
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-redis
+  namespace: ares
+spec:
+  selector:
+    app: ares-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP

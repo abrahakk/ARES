@@ -1,0 +1,31 @@
+PROTO SensorSuite [
+  field SFFloat lidarRangeM     3.0
+  field SFInt32 lidarResolution 180
+  field SFVec3f cameraOffset    0.08 0 0.03
+]
+{
+  Group {
+    children [
+      GPS {
+        name "gps"
+      }
+      InertialUnit {
+        name "inertial unit"
+      }
+      Lidar {
+        name "lidar"
+        horizontalResolution IS lidarResolution
+        fieldOfView 6.283185
+        numberOfLayers 1
+        maxRange IS lidarRangeM
+      }
+      Camera {
+        translation IS cameraOffset
+        name "camera"
+        width 128
+        height 128
+        fieldOfView 1.0
+      }
+    ]
+  }
+}

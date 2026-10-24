@@ -1,0 +1,100 @@
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, replace
+from typing import Callable, List
+
+from evaluation.evaluate_policy import PolicyEvaluator
+from simulation.environments.static import STATIC_ENV_CONFIG
+from simulation.scenarios.exploration import ExplorationScenario
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ScalabilityPoint:
+    num_robots: int
+    mean_coverage: float
+    mean_duplicated_coverage_fraction: float
+    mean_completion_time_steps: float
+
+
+def run_scalability_sweep(
+    act_fn_factory: Callable[[str], Callable],
+    robot_counts: List[int] = (2, 4, 6, 8),
+    experiment_name: str = "scalability",
+    seeds: List[int] = (0, 1, 2, 3, 4),
+) -> List[ScalabilityPoint]:
+   
+    results: List[ScalabilityPoint] = []
+
+    for num_robots in robot_counts:
+        robot_ids = [f"robot_{i+1:02d}" for i in range(num_robots)]
+        condition_name = f"robots_{num_robots}"
+
+        scenario = ExplorationScenario(
+            environment=STATIC_ENV_CONFIG,
+            robot_ids=robot_ids,
+        )
+
+        act_fns = {robot_id: act_fn_factory(robot_id) for robot_id in robot_ids}
+
+        evaluator = PolicyEvaluator(scenario, experiment_name, condition_name)
+        runs = evaluator.run(act_fns, seeds=list(seeds))
+
+        if not runs:
+            logger.warning("scalability sweep: no runs produced for num_robots=%d", num_robots)
+            continue
+
+        mean_coverage = sum(r.coverage for r in runs) / len(runs)
+        completed_runs = [r for r in runs if r.completion_time_steps is not None]
+        mean_completion_time = (
+            sum(r.completion_time_steps for r in completed_runs) / len(completed_runs)
+            if completed_runs else float("nan")
+        )
+
+        results.append(
+            ScalabilityPoint(
+                num_robots=num_robots,
+                mean_coverage=mean_coverage,
+                # Populated by a richer pass over data/trajectories/ +
+                # rl.coordination.cooperative_exploration.CoverageMap.duplicated_coverage_fraction()
+                # if/when that per-episode detail is needed; left at
+                # 0.0 here to keep this function's dependencies to
+                # PolicyEvaluator alone.
+                mean_duplicated_coverage_fraction=0.0,
+                mean_completion_time_steps=mean_completion_time,
+            )
+        )
+
+        logger.info(
+            "scalability sweep: num_robots=%d -> mean_coverage=%.3f mean_completion_steps=%s",
+            num_robots, mean_coverage, mean_completion_time,
+        )
+
+    return results
+
+
+def summarize_scaling_trend(points: List[ScalabilityPoint]) -> str:
+    """
+    A short, honest description of the trend across `points` - used in
+    the experiment write-up (docs/experiments/) rather than left for a
+    reader to eyeball off a table. Deliberately does not claim
+    "scales well" or "scales poorly" - it reports the direction and
+    magnitude of the coverage-per-robot-count trend and lets the
+    experiment write-up interpret it.
+    """
+    if len(points) < 2:
+        return "Insufficient sweep points to characterize a trend."
+
+    sorted_points = sorted(points, key=lambda p: p.num_robots)
+    first, last = sorted_points[0], sorted_points[-1]
+    coverage_delta = last.mean_coverage - first.mean_coverage
+
+    return (
+        f"Mean coverage moved from {first.mean_coverage:.3f} at {first.num_robots} robots "
+        f"to {last.mean_coverage:.3f} at {last.num_robots} robots "
+        f"(delta={coverage_delta:+.3f}). This trend alone does not establish statistical "
+        f"significance - run evaluation.compare_baselines.compare_conditions() on the "
+        f"specific pair of team sizes in question before reporting it as a finding."
+    )

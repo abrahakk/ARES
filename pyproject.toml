@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ares"
+version = "0.1.0"
+description = "Autonomous Reinforcement Learning Exploration System - cooperative multi-robot exploration via multi-agent and hierarchical RL, simulated in Webots and served via FastAPI/ONNX."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "ARES Project Contributors" },
+]
+
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "torch>=2.2",
+    "onnx>=1.15",
+    "onnxruntime>=1.17",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic>=2.6",
+    "prometheus-client>=0.20",
+    "prometheus-fastapi-instrumentator>=7.0",
+    "redis>=5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "ruff>=0.3",
+    "mypy>=1.9",
+]
+
+[tool.setuptools.packages.find]
+include = [
+    "robots*",
+    "rl*",
+    "simulation*",
+    "coordination*",
+    "data*",
+    "evaluation*",
+    "experiments*",
+    "missions*",
+    "monitoring*",
+    "serving*",
+    "training*",
+]
+exclude = ["tests*", "notebooks*", "docs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require a live Redis instance (tests/integration/)",
+    "simulation: tests that require a Webots installation (tests/simulation/)",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+exclude = ["simulation/webots/worlds", "simulation/webots/protos"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]  # line length is handled by the formatter, not the linter
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true

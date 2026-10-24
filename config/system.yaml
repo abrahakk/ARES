@@ -1,0 +1,31 @@
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  socket_timeout_s: 2.0
+  key_ttl_s: 30       
+  channels:
+    messages: "ares:messages"      
+    mission_events: "ares:mission" 
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  log_level: info
+  request_timeout_s: 5.0
+
+monitoring:
+  prometheus_port: 9090
+  grafana_port: 3000
+  metrics_path: /metrics
+  health_path: /health
+
+logging:
+  level: INFO
+  format: "%(asctime)s %(levelname)s %(name)s: %(message)s"
+  log_dir: logs
+
+model_registry:
+  checkpoints_root: models/checkpoints
+  onnx_root: models/onnx
+  registry_file: models/metadata/model_registry.yaml

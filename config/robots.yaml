@@ -1,0 +1,37 @@
+default_robot_ids:
+  - robot_01
+  - robot_02
+
+drive:
+  wheel_radius_m: 0.033
+  axle_length_m: 0.16
+  max_wheel_speed_rad_s: 180.84
+  max_linear_velocity_m_s: 0.3
+  max_angular_velocity_rad_s: 2.0
+
+lidar:
+  device_name: lidar
+  max_range_m: 3.0
+  horizontal_resolution: 180
+  occupancy_grid_size: 5       
+  occupancy_grid_resolution_m: 0.2
+
+gps:
+  device_name: gps
+
+imu:
+  device_name: inertial unit
+
+camera:
+  device_name: camera
+  width: 128
+  height: 128
+  field_of_view_rad: 1.0
+
+safety:
+  obstacle_avoidance_safe_distance_m: 0.25
+  obstacle_avoidance_critical_distance_m: 0.12
+  enable_safety_override: true 
+
+battery:
+  initial_level: 1.0

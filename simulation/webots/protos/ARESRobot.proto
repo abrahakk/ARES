@@ -1,0 +1,142 @@
+#VRML_SIM R2025a utf8
+
+PROTO ARESRobot [
+  field SFVec3f    translation      0 0 0.05
+  field SFRotation rotation         0 0 1 0
+  field SFString   name             "ares_robot"
+  field SFString   controller       "robot_controller"
+  field MFString   controllerArgs   []
+  field SFFloat    wheelRadius      0.05
+  field SFInt32    lidarResolution  360
+  field SFFloat    lidarRangeM      5.0
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    controller IS controller
+    controllerArgs IS controllerArgs
+    children [
+      Shape {
+        appearance PBRAppearance {
+          baseColor 0.1 0.35 0.8
+          roughness 0.55
+          metalness 0.1
+        }
+        geometry Box {
+          size 0.22 0.16 0.06
+        }
+      }
+
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 1 0
+          anchor 0 -0.10 0
+        }
+        device [
+          RotationalMotor {
+            name "left wheel motor"
+            maxVelocity 18.84
+          }
+          PositionSensor {
+            name "left wheel sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0 -0.10 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.05 0.05 0.05
+                roughness 0.9
+              }
+              geometry Cylinder {
+                height 0.03
+                radius IS wheelRadius
+              }
+            }
+          ]
+          name "left_wheel"
+          boundingObject Box {
+            size 0.1 0.1 0.03
+          }
+          physics Physics {
+            density 200.0
+          }
+        }
+      }
+
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 1 0
+          anchor 0 0.10 0
+        }
+        device [
+          RotationalMotor {
+            name "right wheel motor"
+            maxVelocity 18.84
+          }
+          PositionSensor {
+            name "right wheel sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0 0.10 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.05 0.05 0.05
+                roughness 0.9
+              }
+              geometry Cylinder {
+                height 0.03
+                radius IS wheelRadius
+              }
+            }
+          ]
+          name "right_wheel"
+          boundingObject Box {
+            size 0.1 0.1 0.03
+          }
+          physics Physics {
+            density 200.0
+          }
+        }
+      }
+
+      GPS {
+        name "gps"
+      }
+
+      InertialUnit {
+        name "inertial unit"
+      }
+
+      Lidar {
+        translation 0.12 0 0.04
+        name "lidar"
+        horizontalResolution IS lidarResolution
+        fieldOfView 6.283185
+        numberOfLayers 1
+        maxRange IS lidarRangeM
+      }
+
+      Camera {
+        translation 0.12 0 0.03
+        name "camera"
+        width 128
+        height 128
+        fieldOfView 1.0472
+      }
+    ]
+
+    boundingObject Box {
+      size 0.22 0.16 0.06
+    }
+
+    physics Physics {
+      density 500.0
+    }
+  }
+}

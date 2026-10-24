@@ -1,0 +1,130 @@
+{
+  "title": "ARES Overview",
+  "uid": "ares-overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API Request Latency (p50/p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{handler=\"/predict\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler=\"/predict\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Inference-Only Latency (ONNX Runtime)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "description": "The forward-pass component of latency in isolation - what Experiment 8 (proposal Section 11.8) uses to tell inference time apart from network/Redis time.",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ares_inference_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 inference-only"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "API Request Rate and Error Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[5m]))",
+          "legendFormat": "requests/sec"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "errors/sec"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Mission Coverage Fraction",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "ares_coverage_fraction",
+          "legendFormat": "{{mission_id}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Collisions per Robot",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(ares_collisions_total[5m])) by (robot_id)",
+          "legendFormat": "{{robot_id}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Messages Sent per Robot",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "description": "A rising trend with no corresponding rise in coverage gain is the signature evaluation.metrics.communication_coverage_correlation() is designed to catch - a policy communicating without benefit.",
+      "targets": [
+        {
+          "expr": "sum(rate(ares_messages_sent_total[5m])) by (robot_id)",
+          "legendFormat": "{{robot_id}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Mission Completions by Outcome",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "sum(ares_mission_completions_total) by (outcome)",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Robot Failures Detected",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "targets": [
+        {
+          "expr": "sum(rate(ares_robot_failures_total[15m])) by (robot_id)",
+          "legendFormat": "{{robot_id}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Episode Reward by Component",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "description": "Per-component reward, matching the reward-ablation logging described in proposal Section 10.3 - each RewardConfig term visible separately, not just the aggregate.",
+      "targets": [
+        {
+          "expr": "rate(ares_episode_reward_sum[15m]) / rate(ares_episode_reward_count[15m])",
+          "legendFormat": "{{component}}"
+        }
+      ]
+    }
+  ]
+}

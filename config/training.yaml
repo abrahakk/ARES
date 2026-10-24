@@ -1,0 +1,68 @@
+run:
+  num_seeds: 5
+  seeds: [0, 1, 2, 3, 4]
+  device: cpu   
+
+single_agent_ppo:
+  hidden_dim: 256
+  learning_rate: 0.0003
+  clip_epsilon: 0.2
+  value_loss_coef: 0.5
+  entropy_coef: 0.01
+  max_grad_norm: 0.5
+  num_epochs: 4
+  minibatch_size: 64
+  total_env_steps: 500000
+
+single_agent_dqn:
+  learning_rate: 0.001
+  gamma: 0.99
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay_steps: 50000
+  target_update_interval: 500
+  batch_size: 128
+
+single_agent_sac:
+  hidden_dim: 256
+  learning_rate: 0.0003
+  gamma: 0.99
+  tau: 0.005
+  alpha: 0.2
+  batch_size: 128
+
+mappo:
+  hidden_dim: 256
+  actor_lr: 0.0003
+  critic_lr: 0.001
+  clip_epsilon: 0.2
+  entropy_coef: 0.01
+  max_grad_norm: 0.5
+  num_epochs: 4
+  total_env_steps: 1000000
+
+maddpg:
+  hidden_dim: 256
+  actor_lr: 0.001
+  critic_lr: 0.001
+  gamma: 0.99
+  tau: 0.01
+  exploration_noise_std: 0.1
+  batch_size: 256
+
+qmix:
+  learning_rate: 0.0005
+  gamma: 0.99
+  target_update_interval: 200
+  batch_size: 128
+
+hierarchical:
+  decision_interval_steps: 20
+  max_candidates: 8
+  hidden_dim: 256
+  high_level_lr: 0.0003
+  low_level_lr: 0.0003
+
+checkpointing:
+  save_interval_env_steps: 25000
+  keep_best_by_metric: coverage_fraction

@@ -1,0 +1,115 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "../protos/ARESRobot.proto"
+IMPORTABLE EXTERNPROTO "../protos/ARESRobot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/floors/protos/RectangleArena.proto"
+# maze.wbt - Environment 2 ("Static Obstacles")
+#
+# A room subdivided by fixed walls and furniture-scale obstacles into
+# several connected sub-regions (proposal Section 8.2). This is the
+# primary training environment for Experiments 1-4: robots must
+# decide which sub-region to explore and coordinate to avoid sending
+# two robots to the same region.
+
+WorldInfo {
+  info [ "ARES Environment 2: Static Obstacles" ]
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation -0.3 0.3 0.9 1.7
+  position 0 -8 8
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 8 8
+  wallHeight 0.3
+}
+
+# Internal partition walls dividing the arena into sub-regions.
+DEF WALL_1 Solid {
+  translation -1.5 0 0.15
+  name "wall_1"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.6 0.6 0.6 roughness 0.8 }
+      geometry Box { size 0.1 4 0.3 }
+    }
+  ]
+  boundingObject Box { size 0.1 4 0.3 }
+  physics Physics { density 500.0 }
+}
+DEF WALL_2 Solid {
+  translation 1.5 -1 0.15
+  name "wall_2"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.6 0.6 0.6 roughness 0.8 }
+      geometry Box { size 0.1 4 0.3 }
+    }
+  ]
+  boundingObject Box { size 0.1 4 0.3 }
+  physics Physics { density 500.0 }
+}
+
+# Furniture-scale obstacles.
+DEF OBSTACLE_1 Solid {
+  translation 0 2 0.1
+  name "obstacle_1"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.5 0.3 0.2 roughness 0.7 }
+      geometry Box { size 0.5 0.5 0.2 }
+    }
+  ]
+  boundingObject Box { size 0.5 0.5 0.2 }
+  physics Physics { density 300.0 }
+}
+DEF OBSTACLE_2 Solid {
+  translation -2.5 -2 0.1
+  name "obstacle_2"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.5 0.3 0.2 roughness 0.7 }
+      geometry Cylinder { height 0.2 radius 0.3 }
+    }
+  ]
+  boundingObject Cylinder { height 0.2 radius 0.3 }
+  physics Physics { density 300.0 }
+}
+DEF OBSTACLE_3 Solid {
+  translation 2.5 2.5 0.1
+  name "obstacle_3"
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.5 0.3 0.2 roughness 0.7 }
+      geometry Box { size 0.4 0.8 0.2 }
+    }
+  ]
+  boundingObject Box { size 0.4 0.8 0.2 }
+  physics Physics { density 300.0 }
+}
+
+DEF robot_01 ARESRobot {
+  translation -3 -3 0.05
+  rotation 0 0 1 0
+  name "robot_01"
+  controller "robot_controller"
+}
+DEF robot_02 ARESRobot {
+  translation 3 -3 0.05
+  rotation 0 0 1 0
+  name "robot_02"
+  controller "robot_controller"
+}
+
+DEF ARES_SUPERVISOR Robot {
+  name "ares_supervisor"
+  controller "supervisor_controller"
+  supervisor TRUE
+}
+

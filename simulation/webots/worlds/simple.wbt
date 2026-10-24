@@ -1,0 +1,57 @@
+#VRML_SIM R2025a utf8
+EXTERNPROTO "../protos/ARESRobot.proto"
+IMPORTABLE EXTERNPROTO "../protos/ARESRobot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/released/projects/objects/floors/protos/RectangleArena.proto"
+
+# simple.wbt - Environment 1 ("Open Room")
+#
+# A single open rectangular room with no internal obstacles. Exists
+# primarily as an infrastructure check (proposal Section 8.1) - it
+# validates the basic navigation, coverage-tracking, and
+# reward-logging pipeline before any harder problem is introduced.
+# No headline results are reported from this environment.
+
+WorldInfo {
+  info [ "ARES Environment 1: Open Room (infrastructure check)" ]
+  basicTimeStep 8
+  contactProperties [
+    ContactProperties {
+      material1 "default"
+      material2 "default"
+      coulombFriction [ 0.6 ]
+    }
+  ]
+}
+Viewpoint {
+  orientation -0.3 0.3 0.9 1.6
+  position 0 -6 6
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 8 8
+  wallHeight 0.3
+}
+
+DEF robot_01 ARESRobot {
+  translation -2 -2 0.05
+  rotation 0 0 1 0
+  name "robot_01"
+  controller "robot_controller"
+}
+DEF robot_02 ARESRobot {
+  translation 2 -2 0.05
+  rotation 0 0 1 0
+  name "robot_02"
+  controller "robot_controller"
+}
+
+DEF ARES_SUPERVISOR Robot {
+  name "ares_supervisor"
+  controller "supervisor_controller"
+  supervisor TRUE
+}

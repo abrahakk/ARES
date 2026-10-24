@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ares-prometheus-config
+  namespace: ares
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: "ares-api"
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ["ares"]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            target_label: __address__
+            regex: (.+)
+            replacement: "$1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-prometheus
+  namespace: ares
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ares-prometheus
+  template:
+    metadata:
+      labels:
+        app: ares-prometheus
+    spec:
+      serviceAccountName: ares-prometheus
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.51.0
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: storage
+              mountPath: /prometheus
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: config
+          configMap:
+            name: ares-prometheus-config
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ares-prometheus
+  namespace: ares
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ares-prometheus
+  namespace: ares
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ares-prometheus
+  namespace: ares
+subjects:
+  - kind: ServiceAccount
+    name: ares-prometheus
+    namespace: ares
+roleRef:
+  kind: Role
+  name: ares-prometheus
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-prometheus
+  namespace: ares
+spec:
+  selector:
+    app: ares-prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares-grafana
+  namespace: ares
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ares-grafana
+  template:
+    metadata:
+      labels:
+        app: ares-grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.4.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ares-grafana-admin
+                  key: password
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ares-grafana-admin
+  namespace: ares
+type: Opaque
+stringData:
+  password: "changeme"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ares-grafana
+  namespace: ares
+spec:
+  selector:
+    app: ares-grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
