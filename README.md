@@ -20,7 +20,7 @@ degrades. A learned policy is exported to ONNX and served through a
 schema-validated API, so it can be queried during both training and deployment.
 
 ## Quick start: see the simulation with Docker (no installation except Docker)
-
+https://hub.docker.com/r/abrahakk/ares-simulation
 The image `abrahakk/ares-simulation:latest` on Docker Hub includes Webots R2025a,
 the ARES code, and all Python dependencies (CPU-only PyTorch).
 
