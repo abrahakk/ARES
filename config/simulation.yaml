@@ -1,5 +1,5 @@
 webots:
-  basic_time_step_ms: 32
+  basic_time_step_ms: 16
   max_steps_per_episode: 2000
   coverage_success_threshold: 0.9
 
